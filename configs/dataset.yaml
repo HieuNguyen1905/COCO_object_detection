@@ -1,0 +1,19 @@
+# Dataset Configuration - COCO 2017
+data:
+  root: data
+  train_images: data/raw/train2017
+  val_images: data/raw/val2017
+  train_json: data/annotations/instances_train2017.json
+  val_json: data/annotations/instances_val2017.json
+
+dataloader:
+  batch_size: 8
+  num_workers: 2
+  pin_memory: true
+  shuffle_train: true
+  shuffle_val: false
+
+image:
+  image_size: 640
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
