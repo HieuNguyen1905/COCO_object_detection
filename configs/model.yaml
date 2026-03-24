@@ -1,0 +1,6 @@
+# Model Configuration
+detectors:
+  fasterrcnn:
+    name: fasterrcnn_resnet50_fpn
+    pretrained: true
+    num_classes: 91
