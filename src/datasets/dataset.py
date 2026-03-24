@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class COCODetectionDataset(Dataset):
 
-    def __init__(self, img_dir: str, ann_file: str, transforms: Callable | None = None,):
+    def __init__(self, img_dir, ann_file, transforms=None,):
         super().__init__()
         self.img_dir = img_dir
         self.transforms = transforms

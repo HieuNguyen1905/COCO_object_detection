@@ -1,0 +1,9 @@
+2026-03-11 16:16:51 | INFO     | Log file: experiments/exp01/logs/training.log
+2026-03-11 16:16:51 | INFO     | Starting training for 50 epochs on cpu
+2026-03-11 16:16:51 | INFO     | Checkpoints will be saved to experiments/exp01/checkpoints
+2026-03-11 16:20:20 | INFO     | Log file: experiments/exp01/logs/training.log
+2026-03-11 16:20:20 | INFO     | Starting training for 50 epochs on cpu
+2026-03-11 16:20:20 | INFO     | Checkpoints will be saved to experiments/exp01/checkpoints
+2026-03-11 16:58:32 | INFO     | Log file: experiments/exp01/logs/training.log
+2026-03-11 16:58:32 | INFO     | Starting training for 50 epochs on cpu
+2026-03-11 16:58:32 | INFO     | Checkpoints will be saved to experiments/exp01/checkpoints
