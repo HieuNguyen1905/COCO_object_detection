@@ -55,7 +55,7 @@ Thumbs.db
 *.env
 
 # Project outputs
-output/
+outputs/
 
 # Optional local data artifacts
 data/

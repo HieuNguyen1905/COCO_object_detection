@@ -1,0 +1,29 @@
+BASE_PATH: "data"
+TRAIN_IMAGES: "data/raw/train2017"
+VAL_IMAGES: "data/raw/val2017"
+TRAIN_JSON: "data/annotations/instances_train2017.json"
+VAL_JSON: "data/annotations/instances_val2017.json"
+
+BASE_OUTPUT: "outputs"
+
+MODEL_OUTPUT: "outputs/model.pth"
+LE_PATH: "outputs/le.pickle"
+PLOTS_PATH: "outputs/plots"
+TEST_PATHS: "outputs/test_paths.txt"
+
+MEAN: [0.485, 0.456, 0.406]
+STD: [0.229, 0.224, 0.225]
+
+BASE_MODEL: "resnet50"
+
+LEARNING_RATE: 0.0001
+NUM_EPOCHS: 20
+BATCH_SIZE: 2
+NUM_WORKERS: 0
+PIN_MEMORY: true
+DEVICE: "cuda"
+
+LABELS: 1.0
+BBOX: 1.0
+
+IMAGE_SIZE: 640

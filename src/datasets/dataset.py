@@ -2,7 +2,7 @@ from __future__ import annotations
 import logging
 import os
 import random
-from typing import Any, Callable
+from typing import Any
 import cv2
 import numpy as np
 import torch
@@ -112,6 +112,8 @@ class COCODetectionDataset(Dataset):
             image = transformed["image"]  # already a tensor (C, H, W)
             boxes = transformed["bboxes"]
             labels = transformed["labels"]
+            # ToTensorV2 outputs uint8, need float [0, 1] for Faster R-CNN
+            image = image.float() / 255.0
         else:
             image = torch.from_numpy(image).permute(2, 0, 1).float() / 255.0
 
