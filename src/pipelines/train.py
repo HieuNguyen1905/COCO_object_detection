@@ -22,8 +22,8 @@ def main():
 
     # num_classes from config or dataset + 1 for background
     num_classes = config.get("NUM_CLASSES", dm.num_classes + 1)
-
-    model = build_model(num_classes=num_classes, pretrained=config.get("PRETRAINED", True))
+    base_model = config.get("BASE_MODEL", "fasterrcnn_resnet50_fpn")
+    model = build_model(num_classes=num_classes, pretrained=config.get("PRETRAINED", True), base_model=base_model)
 
     # Device handling
     device_config = config.get("DEVICE", "auto")
