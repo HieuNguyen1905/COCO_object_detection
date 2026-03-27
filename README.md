@@ -2,16 +2,17 @@
 
 Dự án object detection sử dụng Faster R-CNN với ResNet50 backbone để phát hiện các đối tượng trong ảnh trên COCO dataset.
 
-## Tính năng
+## ✨ Tính năng
 
 - **Model**: Faster R-CNN với ResNet50-FPN backbone (pretrained trên ImageNet)
 - **Dataset**: COCO 2017 (118K training images, 5K validation images, 80 object classes)
 - **Data Augmentation**: Albumentations với các phép biến đổi đa dạng
-- **Training**: Hỗ trợ CUDA với mixed precision (nếu có)
-- **Inference**: Pipeline dự đoán với visualization
-- **Checkpointing**: Tự động lưu checkpoint sau mỗi epoch
+- **Training**: Hỗ trợ CUDA, automatic checkpoint management (best/last)
+- **Evaluation**: Tích hợp mAP (mean Average Precision) calculation
+- **Inference**: Pipeline dự đoán với visualization và flexible CLI
+- **Mini Dataset**: Hỗ trợ tạo mini dataset để test code nhanh
 
-## Cấu trúc dự án
+## 📁 Cấu trúc dự án
 
 ```
 object_detection/
@@ -20,41 +21,53 @@ object_detection/
 ├── data/
 │   ├── raw/
 │   │   ├── train2017/           # COCO training images
-│   │   └── val2017/             # COCO validation images
+│   │   ├── val2017/             # COCO validation images
+│   │   ├── mini_train2017/      # Mini training set (100 images)
+│   │   └── mini_val2017/        # Mini validation set (50 images)
 │   └── annotations/
 │       ├── instances_train2017.json
-│       └── instances_val2017.json
+│       ├── instances_val2017.json
+│       ├── mini_instances_train2017.json
+│       └── mini_instances_val2017.json
 ├── src/
 │   ├── datasets/
 │   │   ├── dataset.py           # COCO dataset loader
-│   │   ├── coco_dataset.py      # COCO utilities
 │   │   └── datamodule.py        # DataModule wrapper
 │   ├── models/
 │   │   └── bbox_regressor.py    # Faster R-CNN model builder
 │   ├── training/
-│   │   └── trainer.py           # Training logic
+│   │   ├── trainer.py           # Training logic với mAP evaluation
+│   │   ├── optimizer.py         # Optimizer configurations
+│   │   └── scheduler.py         # Learning rate schedulers
 │   ├── inference/
 │   │   └── predictor.py         # Inference pipeline
 │   ├── pipelines/
-│   │   ├── trains.py            # Training script
-│   │   └── inference.py         # Inference script
+│   │   ├── train.py             # Training script
+│   │   └── inference.py         # Inference CLI
 │   └── utils/
 │       ├── config.py            # Config loader
+│       ├── transform.py         # Data augmentation pipelines
+│       ├── metrics.py           # mAP calculation
 │       └── visualization.py     # Visualization utilities
+├── tools/
+│   ├── extract_mini_coco.py     # Tạo mini dataset
+│   ├── debug_predictions.py     # Debug tool
+│   └── test_inference.py        # Quick test inference
 ├── outputs/
-│   ├── checkpoint_epoch_*.pth   # Saved checkpoints
-│   └── plots/                   # Training plots
+│   ├── best.pth                # Best checkpoint (highest mAP)
+│   ├── last.pth                # Latest checkpoint
+│   └── inference/              # Inference results
 └── README.md
 ```
 
-## Yêu cầu hệ thống
+## 📋 Yêu cầu hệ thống
 
 - Python 3.8+
 - CUDA 11.0+ (khuyến nghị cho training)
 - 16GB RAM (tối thiểu)
 - GPU với 8GB+ VRAM (khuyến nghị)
 
-## Cài đặt
+## 🔧 Cài đặt
 
 ### 1. Clone repository
 
@@ -76,10 +89,10 @@ source .venv/bin/activate  # Linux/Mac
 
 ```bash
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-pip install albumentations pycocotools pyyaml tqdm opencv-python matplotlib
+pip install albumentations pycocotools pyyaml tqdm opencv-python matplotlib numpy
 ```
 
-## Chuẩn bị dữ liệu
+## 📦 Chuẩn bị dữ liệu
 
 ### Download COCO 2017 dataset
 
@@ -103,37 +116,43 @@ unzip annotations_trainval2017.zip -d data/
 mv data/annotations/*.json data/annotations/
 ```
 
-Cấu trúc thư mục data sau khi download:
+### Tạo Mini Dataset (cho quick testing)
 
-```
-data/
-├── raw/
-│   ├── train2017/          # 118,287 images
-│   └── val2017/            # 5,000 images
-└── annotations/
-    ├── instances_train2017.json
-    └── instances_val2017.json
+```bash
+# Tạo mini train (100 images) và mini val (50 images)
+python3 tools/extract_mini_coco.py
 ```
 
-## Cấu hình
-
-Chỉnh sửa file `configs/configs.yaml` để thay đổi hyperparameters:
+Sau khi chạy, cập nhật `configs/configs.yaml`:
 
 ```yaml
-# Đường dẫn dữ liệu
-TRAIN_IMAGES: "data/raw/train2017"
-VAL_IMAGES: "data/raw/val2017"
-TRAIN_JSON: "data/annotations/instances_train2017.json"
-VAL_JSON: "data/annotations/instances_val2017.json"
+# Dùng mini dataset để test nhanh
+TRAIN_IMAGES: "data/raw/mini_train2017"
+VAL_IMAGES: "data/raw/mini_val2017"
+TRAIN_JSON: "data/annotations/mini_instances_train2017.json"
+VAL_JSON: "data/annotations/mini_instances_val2017.json"
+
+# Hoặc dùng full dataset để train production model
+# TRAIN_IMAGES: "data/raw/train2017"
+# VAL_IMAGES: "data/raw/val2017"
+# TRAIN_JSON: "data/annotations/instances_train2017.json"
+# VAL_JSON: "data/annotations/instances_val2017.json"
+```
+
+## ⚙️ Cấu hình
+
+File `configs/configs.yaml`:
+
+```yaml
+# Dataset paths
+BASE_PATH: "data"
+TRAIN_IMAGES: "data/raw/mini_train2017"
+VAL_IMAGES: "data/raw/mini_val2017"
+TRAIN_JSON: "data/annotations/mini_instances_train2017.json"
+VAL_JSON: "data/annotations/mini_instances_val2017.json"
 
 # Output
 BASE_OUTPUT: "outputs"
-MODEL_OUTPUT: "outputs/model.pth"
-PLOTS_PATH: "outputs/plots"
-
-# Normalization (ImageNet stats)
-MEAN: [0.485, 0.456, 0.406]
-STD: [0.229, 0.224, 0.225]
 
 # Model
 BASE_MODEL: "resnet50"
@@ -142,24 +161,19 @@ IMAGE_SIZE: 640
 # Training hyperparameters
 LEARNING_RATE: 0.0001
 NUM_EPOCHS: 20
-BATCH_SIZE: 2              # Tăng nếu có GPU mạnh
-NUM_WORKERS: 0             # Tăng để load data nhanh hơn
-PIN_MEMORY: true
+BATCH_SIZE: 4              # Tăng nếu có GPU mạnh
+NUM_WORKERS: 2             # Tăng để load data nhanh hơn
+PIN_MEMORY: false
 DEVICE: "cuda"             # "cpu" nếu không có GPU
-
-# Loss weights
-LABELS: 1.0
-BBOX: 1.0
 ```
 
 ### Các tham số quan trọng
 
 - **BATCH_SIZE**: 2-4 cho GPU 8GB, 8-16 cho GPU 24GB+
-- **NUM_WORKERS**: 0 (single-process), 4-8 (multi-process loading)
+- **NUM_WORKERS**: 0 (single-process), 2-4 (multi-process loading)
 - **IMAGE_SIZE**: 640 (default), có thể tăng lên 800-1024 cho độ chính xác cao hơn
-- **LEARNING_RATE**: 0.0001 (default), có thể dùng learning rate scheduler
 
-## Training
+## 🚀 Training
 
 ### Chạy training
 
@@ -168,162 +182,290 @@ BBOX: 1.0
 source .venv/bin/activate
 
 # Start training
-python3 -m src.pipelines.trains
+python3 -m src.pipelines.train
 ```
 
-### Monitor training
+### Output training
 
 Training sẽ hiển thị:
-- Progress bar với loss cho mỗi batch
-- Training loss và validation loss sau mỗi epoch
-- Checkpoints được lưu tự động vào `outputs/checkpoint_epoch_*.pth`
+- **Progress bar** với loss cho mỗi batch
+- **Validation loss** và **mAP** sau mỗi epoch
+- **Auto-save** best.pth (khi mAP tăng) và last.pth (mỗi epoch)
 
 ```
 loading annotations into memory...
-Done (t=4.19s)
+Done (t=0.01s)
 creating index...
 index created!
-Epoch 1 | Step 0 | Loss: 4.7106: 100%|████████| 58633/58633 [5:23:45<00:00]
+
+Epoch 1 | Step 20 | Loss: 1.5283: 100%|████████| 25/25 [04:09<00:00, 10.56s/it]
+
+Validating...
+Val Loss: 100%|████████████████| 13/13 [00:51<00:00, 3.97s/it]
+Evaluating mAP...
+Inference: 100%|█████████████████| 13/13 [00:53<00:00, 4.14s/it]
+Calculating mAP metrics...
+Debug: Total predictions: 450, Total targets: 280
+Score range: [0.0234, 0.9876], Mean: 0.4521
+Class 1: 45 preds, 32 targets
+  -> AP: 0.4123
+...
+Final mAP from 15 classes: 0.4094
+
 Epoch 1:
-Train Loss: 2.3456
-Val Loss: 1.8734
+Train Loss: 1.7660
+Val Loss: 1.1084
+mAP: 0.4094
+Best model saved with mAP: 0.4094
 ```
+
+### Checkpoint Management
+
+- **best.pth**: Checkpoint với mAP cao nhất (tự động lưu khi mAP cải thiện)
+- **last.pth**: Checkpoint mới nhất (lưu sau mỗi epoch)
 
 ### Resume training từ checkpoint
 
-Chỉnh sửa `src/pipelines/trains.py`:
-
 ```python
-# Load checkpoint
-checkpoint = torch.load("outputs/checkpoint_epoch_5.pth")
-model.load_state_dict(checkpoint["model"])
-optimizer.load_state_dict(checkpoint["optimizer"])
-start_epoch = checkpoint["epoch"] + 1
+# Trong src/pipelines/train.py, thêm:
+import os
+
+checkpoint_path = "outputs/last.pth"
+if os.path.exists(checkpoint_path):
+    checkpoint = torch.load(checkpoint_path)
+    model.load_state_dict(checkpoint["model"])
+    optimizer.load_state_dict(checkpoint["optimizer"])
+    start_epoch = checkpoint["epoch"] + 1
+    print(f"Resumed from epoch {start_epoch}, mAP: {checkpoint['mAP']:.4f}")
 ```
 
-## Inference
+## 🔍 Inference
 
-### Chạy inference trên ảnh
+### 1. Single image
 
 ```bash
-python3 -m src.pipelines.inference --image path/to/image.jpg --checkpoint outputs/checkpoint_epoch_20.pth
+# Tự động dùng best.pth
+python -m src.pipelines.inference --image path/to/image.jpg
+
+# Chỉ định checkpoint
+python -m src.pipelines.inference \
+    --image path/to/image.jpg \
+    --weights outputs/last.pth
+```
+
+### 2. Multiple images
+
+```bash
+python -m src.pipelines.inference \
+    --image img1.jpg img2.jpg img3.jpg
+```
+
+### 3. Folder of images
+
+```bash
+python -m src.pipelines.inference \
+    --image data/raw/mini_val2017/ \
+    --output results/
+```
+
+### 4. Adjust thresholds
+
+```bash
+python -m src.pipelines.inference \
+    --image photo.jpg \
+    --conf-thresh 0.3 \
+    --nms-thresh 0.4
+```
+
+### 5. Print only (no save)
+
+```bash
+python -m src.pipelines.inference \
+    --image photo.jpg \
+    --no-save
+```
+
+### Output
+
+```
+Processing 000000016228.jpg ...
+  Detections: 5
+              person  0.987  [145, 234, 456, 678]
+                 car  0.892  [23, 45, 198, 234]
+                  dog  0.765  [345, 123, 456, 345]
+  Saved → outputs/inference/000000016228_det.jpg
+```
+
+### Quick test
+
+```bash
+# Test nhanh trên 3 ảnh validation
+python3 tools/test_inference.py
 ```
 
 ### Sử dụng trong code
 
 ```python
-from src.models.bbox_regressor import build_model
 from src.inference.predictor import Predictor
-import torch
 
-# Load model
-model = build_model(num_classes=91, pretrained=False)
-checkpoint = torch.load("outputs/checkpoint_epoch_20.pth")
-model.load_state_dict(checkpoint["model"])
-
-# Create predictor
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-predictor = Predictor(model, device)
+# Initialize predictor
+predictor = Predictor(
+    checkpoint_path="outputs/best.pth",
+    num_classes=81,  # 80 classes + background
+    device="cuda",
+    conf_threshold=0.5,
+    nms_threshold=0.5,
+)
 
 # Predict
-predictions = predictor.predict("path/to/image.jpg")
+result = predictor.predict("path/to/image.jpg")
+
+print(f"Found {len(result['boxes'])} objects")
+for box, score, label in zip(result['boxes'], result['scores'], result['labels']):
+    print(f"Class {label}: {score:.3f} at {box}")
 ```
 
-## Data Augmentation
+## 📊 Data Augmentation
 
-Training sử dụng các phép augmentation sau (Albumentations):
+### Training transforms (src/utils/transform.py)
 
-- **Geometric transforms**:
-  - Resize với LongestMaxSize: 640px
-  - Padding để đảm bảo kích thước cố định
-  - Horizontal flip (p=0.5)
+```python
+- LongestMaxSize(max_size=640)
+- PadIfNeeded(min_height=640, min_width=640)
+- HorizontalFlip(p=0.5)
+- ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1, p=0.5)
+- RandomBrightnessContrast(p=0.3)
+- GaussianBlur(blur_limit=(3, 7), p=0.2)
+- ToTensorV2()
+```
 
-- **Color transforms**:
-  - ColorJitter: brightness, contrast, saturation, hue (p=0.5)
-  - RandomBrightnessContrast (p=0.3)
+### Validation/Inference transforms
 
-- **Noise/Blur**:
-  - GaussianBlur (p=0.2)
+```python
+- LongestMaxSize(max_size=640)
+- PadIfNeeded(min_height=640, min_width=640)
+- ToTensorV2()
+```
 
-Validation chỉ sử dụng resize + padding (không augmentation).
-
-## Model Architecture
+## 🏗️ Model Architecture
 
 ### Faster R-CNN Components
 
-1. **Backbone**: ResNet50 với Feature Pyramid Network (FPN)
+1. **Backbone**: ResNet50-FPN
    - Pretrained trên ImageNet
-   - Tạo multi-scale feature maps
+   - Feature Pyramid Network cho multi-scale features
 
 2. **Region Proposal Network (RPN)**
-   - Đề xuất các vùng có khả năng chứa object
-   - Anchor boxes với nhiều scales và aspect ratios
+   - Đề xuất regions có khả năng chứa objects
+   - Anchor-based với multiple scales/ratios
 
-3. **ROI Pooling & Heads**
-   - Box predictor: dự đoán class và bounding box refinement
-   - Fast R-CNN predictor với 91 classes (80 COCO + background)
+3. **ROI Head**
+   - Box classifier: 81 classes (80 COCO + background)
+   - Box regressor: bounding box refinement
 
-### Loss Function
+### Loss Components
 
-Faster R-CNN sử dụng multi-task loss:
-- **Classification loss**: Cross-entropy cho object classes
-- **Bounding box regression loss**: Smooth L1 loss cho box coordinates
-- **RPN losses**: Classification và regression cho region proposals
+```
+Total Loss = RPN_cls + RPN_reg + ROI_cls + ROI_reg
+```
 
-## Performance Tips
+## 📈 Evaluation Metrics
+
+### mAP (mean Average Precision)
+
+- **AP per class**: Average Precision cho mỗi class
+- **mAP**: Mean của tất cả class APs
+- **IoU threshold**: 0.5 (default)
+- **Evaluation**: 11-point interpolation
+
+```python
+# Trong src/utils/metrics.py
+def evaluate_map(model, dataloader, device, num_classes, iou_threshold=0.5):
+    # Inference trên validation set
+    # Calculate precision-recall cho mỗi class
+    # Compute AP và average thành mAP
+    ...
+```
+
+## 🎯 Performance Tips
 
 ### Tăng tốc training
 
-1. **Tăng batch size**: Nếu GPU có đủ memory
+1. **GPU**: Sử dụng CUDA thay vì CPU
    ```yaml
-   BATCH_SIZE: 8  # thay vì 2
+   DEVICE: "cuda"
    ```
 
-2. **Tăng num_workers**: Parallel data loading
+2. **Batch size**: Tăng nếu GPU có đủ memory
    ```yaml
-   NUM_WORKERS: 4  # hoặc 8
+   BATCH_SIZE: 8
    ```
 
-3. **Mixed precision training**: Thêm vào trainer
-   ```python
-   from torch.cuda.amp import autocast, GradScaler
-   scaler = GradScaler()
-   ```
-
-4. **Reduce image size**: Nếu cần training nhanh hơn
+3. **Num workers**: Parallel data loading
    ```yaml
-   IMAGE_SIZE: 512  # thay vì 640
+   NUM_WORKERS: 4
    ```
 
-### GPU Memory optimization
+4. **Pin memory**: Tăng tốc transfer GPU
+   ```yaml
+   PIN_MEMORY: true
+   ```
 
-- Giảm BATCH_SIZE nếu gặp CUDA out of memory
-- Giảm IMAGE_SIZE
-- Sử dụng gradient accumulation cho effective larger batch size
+### Tăng độ chính xác
 
-## Troubleshooting
+1. **Image size lớn hơn**:
+   ```yaml
+   IMAGE_SIZE: 800  # thay vì 640
+   ```
+
+2. **Train lâu hơn**:
+   ```yaml
+   NUM_EPOCHS: 50
+   ```
+
+3. **Learning rate scheduler**: Giảm LR theo thời gian
+
+4. **Use full dataset** thay vì mini dataset
+
+## 🐛 Troubleshooting
 
 ### CUDA out of memory
+
 ```
 RuntimeError: CUDA out of memory
 ```
-**Giải pháp**: Giảm `BATCH_SIZE` hoặc `IMAGE_SIZE` trong configs
+
+**Giải pháp**:
+- Giảm `BATCH_SIZE` (ví dụ: 4 → 2)
+- Giảm `IMAGE_SIZE` (640 → 512)
+- Set `NUM_WORKERS: 0`
 
 ### Slow data loading
-```
-Training is slow, bottleneck at data loading
-```
-**Giải pháp**: Tăng `NUM_WORKERS` trong configs (4-8)
 
-### Annotation errors
 ```
-KeyError: 'boxes' or 'labels'
+Training bottleneck at data loading
 ```
-**Giải pháp**: Kiểm tra format của COCO annotations và đường dẫn trong configs
 
-## COCO Classes
+**Giải pháp**:
+- Tăng `NUM_WORKERS` (0 → 2 → 4)
+- Set `PIN_MEMORY: true`
+- Sử dụng SSD thay vì HDD
 
-Model được train với 80 object classes của COCO dataset:
+### Model không học (loss không giảm)
+
+**Giải pháp**:
+- Kiểm tra learning rate (thử 0.0001, 0.001, 0.00001)
+- Kiểm tra data augmentation (tắt một số để test)
+- Verify dataset format (boxes, labels đúng format)
+
+### mAP = 0 ở epoch đầu
+
+**Bình thường!** Model chưa học được:
+- Chờ thêm 5-10 epochs
+- mAP sẽ tăng dần khi model học
+- Check predictions với `tools/debug_predictions.py`
+
+## 📚 COCO Classes (80 classes)
 
 ```
 person, bicycle, car, motorcycle, airplane, bus, train, truck, boat,
@@ -338,25 +480,26 @@ microwave, oven, toaster, sink, refrigerator, book, clock, vase, scissors,
 teddy bear, hair drier, toothbrush
 ```
 
-## References
+## 🔗 References
 
-- [Faster R-CNN Paper](https://arxiv.org/abs/1506.01497)
-- [COCO Dataset](https://cocodataset.org/)
-- [PyTorch Torchvision Models](https://pytorch.org/vision/stable/models.html)
-- [Albumentations](https://albumentations.ai/)
+- [Faster R-CNN Paper](https://arxiv.org/abs/1506.01497) - Ren et al., 2015
+- [COCO Dataset](https://cocodataset.org/) - Lin et al., 2014
+- [PyTorch Torchvision](https://pytorch.org/vision/stable/models.html)
+- [Albumentations](https://albumentations.ai/) - Fast image augmentation library
 
-## License
+## 📄 License
 
-[Chọn license phù hợp: MIT, Apache 2.0, GPL, etc.]
+MIT License
 
-## Contributing
+## 🤝 Contributing
 
-Mọi đóng góp đều được chào đón! Vui lòng tạo issue hoặc pull request.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## Author
+## 👤 Author
 
-Hieu Nguyen
+**Hieu Nguyen**
+- GitLab: [@hieunp](http://gitlab.technica.vn/hieunp)
 
 ---
 
-**Note**: Dự án này được phát triển cho mục đích học tập và nghiên cứu.
+**Note**: Dự án này được phát triển cho mục đích học tập và nghiên cứu về Object Detection với Faster R-CNN.
