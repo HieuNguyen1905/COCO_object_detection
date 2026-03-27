@@ -4,16 +4,7 @@ from tqdm import tqdm
 
 
 def calculate_iou(box1, box2):
-    """
-    Calculate IoU between two boxes.
 
-    Args:
-        box1: [x1, y1, x2, y2]
-        box2: [x1, y1, x2, y2]
-
-    Returns:
-        IoU score
-    """
     x1 = max(box1[0], box2[0])
     y1 = max(box1[1], box2[1])
     x2 = min(box1[2], box2[2])
@@ -28,17 +19,7 @@ def calculate_iou(box1, box2):
 
 
 def calculate_ap(precisions, recalls, num_points=11):
-    """
-    Calculate Average Precision (AP) using n-point interpolation.
 
-    Args:
-        precisions: List of precision values
-        recalls: List of recall values
-        num_points: Number of interpolation points (default: 11)
-
-    Returns:
-        Average Precision score
-    """
     precisions = np.array(precisions)
     recalls = np.array(recalls)
 
@@ -60,19 +41,7 @@ def calculate_ap(precisions, recalls, num_points=11):
 
 
 def calculate_map(predictions, targets, num_classes, iou_threshold=0.5, num_points=11):
-    """
-    Calculate mean Average Precision (mAP) for object detection.
 
-    Args:
-        predictions: List of dicts with 'boxes', 'labels', 'scores'
-        targets: List of dicts with 'boxes', 'labels'
-        num_classes: Number of classes (including background)
-        iou_threshold: IoU threshold for matching predictions to ground truth
-        num_points: Number of interpolation points for AP calculation
-
-    Returns:
-        mAP score
-    """
     aps = []
 
     # Debug info
@@ -172,20 +141,7 @@ def calculate_map(predictions, targets, num_classes, iou_threshold=0.5, num_poin
 
 @torch.no_grad()
 def evaluate_map(model, dataloader, device, num_classes, iou_threshold=0.5, num_points=11):
-    """
-    Evaluate mAP on a dataset.
 
-    Args:
-        model: Detection model
-        dataloader: DataLoader for evaluation
-        device: Device to run on
-        num_classes: Number of classes (including background)
-        iou_threshold: IoU threshold for matching
-        num_points: Number of interpolation points for AP calculation
-
-    Returns:
-        mAP score
-    """
     model.eval()
 
     all_predictions = []

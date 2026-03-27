@@ -2,15 +2,7 @@ from torch.optim.lr_scheduler import StepLR, CosineAnnealingLR
 
 
 def build_scheduler(optimizer, config):
-    """Build learning rate scheduler from config.
 
-    Args:
-        optimizer: PyTorch optimizer
-        config: Config dict with scheduler settings
-
-    Returns:
-        PyTorch scheduler or None
-    """
     scheduler_type = config["SCHEDULER"].lower()
 
     if scheduler_type == "step":

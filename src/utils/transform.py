@@ -3,15 +3,7 @@ from albumentations.pytorch import ToTensorV2
 
 
 def get_train_transforms(image_size):
-    """
-    Get training augmentation pipeline for object detection.
 
-    Args:
-        image_size: Target size for images
-
-    Returns:
-        Albumentations Compose object with training transforms
-    """
     return A.Compose(
         [
             A.LongestMaxSize(max_size=image_size),
@@ -43,15 +35,7 @@ def get_train_transforms(image_size):
 
 
 def get_val_transforms(image_size):
-    """
-    Get validation/test augmentation pipeline for object detection.
 
-    Args:
-        image_size: Target size for images
-
-    Returns:
-        Albumentations Compose object with validation transforms
-    """
     return A.Compose(
         [
             A.LongestMaxSize(max_size=image_size),
@@ -73,15 +57,7 @@ def get_val_transforms(image_size):
 
 
 def get_inference_transforms(image_size):
-    """
-    Get inference augmentation pipeline (no bbox_params needed).
 
-    Args:
-        image_size: Target size for images
-
-    Returns:
-        Albumentations Compose object with inference transforms
-    """
     return A.Compose(
         [
             A.LongestMaxSize(max_size=image_size),

@@ -129,10 +129,6 @@ class COCODetectionDataset(Dataset):
         return image, target
     
 def collate_fn( batch: list[tuple[torch.Tensor, dict[str, Any]]],) -> tuple[list[torch.Tensor], list[dict[str, Any]]]:
-    """Custom collate function for detection.
 
-    Returns images as a list of tensors (variable-size targets prevent stacking)
-    and targets as a list of dicts.
-    """
     images, targets = zip(*batch)
     return list(images), list(targets)
