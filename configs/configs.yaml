@@ -1,29 +1,65 @@
 BASE_PATH: "data"
-TRAIN_IMAGES: "data/raw/train2017"
-VAL_IMAGES: "data/raw/val2017"
-TRAIN_JSON: "data/annotations/instances_train2017.json"
-VAL_JSON: "data/annotations/instances_val2017.json"
+TRAIN_IMAGES: "data/raw/mini_train2017"
+VAL_IMAGES: "data/raw/mini_val2017"
+TRAIN_JSON: "data/annotations/mini_instances_train2017.json"
+VAL_JSON: "data/annotations/mini_instances_val2017.json"
 
 BASE_OUTPUT: "outputs"
+INFERENCE_OUTPUT: "outputs/inference"
 
 MODEL_OUTPUT: "outputs/model.pth"
 LE_PATH: "outputs/le.pickle"
 PLOTS_PATH: "outputs/plots"
 TEST_PATHS: "outputs/test_paths.txt"
 
+# Image preprocessing
 MEAN: [0.485, 0.456, 0.406]
 STD: [0.229, 0.224, 0.225]
+IMAGE_SIZE: 640
 
-BASE_MODEL: "resnet50"
+# Model
+BASE_MODEL: "resnet50"  # resnet50 or mobilenet_v3
+NUM_CLASSES: 81  # 80 COCO classes + background
+PRETRAINED: true
+TRAINABLE_BACKBONE_LAYERS: 3  # 0-5, number of trainable backbone layers
 
+# Faster R-CNN parameters
+BOX_SCORE_THRESH: 0.05  # Score threshold for predictions
+BOX_NMS_THRESH: 0.5  # NMS IoU threshold during training
+BOX_DETECTIONS_PER_IMG: 100  # Max detections per image
+RPN_PRE_NMS_TOP_N_TRAIN: 2000  # RPN pre-NMS top N (training)
+RPN_PRE_NMS_TOP_N_TEST: 1000  # RPN pre-NMS top N (testing)
+RPN_POST_NMS_TOP_N_TRAIN: 2000  # RPN post-NMS top N (training)
+RPN_POST_NMS_TOP_N_TEST: 1000  # RPN post-NMS top N (testing)
+
+# Training hyperparameters
 LEARNING_RATE: 0.0001
 NUM_EPOCHS: 20
-BATCH_SIZE: 2
-NUM_WORKERS: 0
-PIN_MEMORY: true
-DEVICE: "cuda"
+BATCH_SIZE: 4
+NUM_WORKERS: 2
+PIN_MEMORY: false
+DEVICE: "cuda"  # or "cpu", "auto" for auto-detection
 
+# Optimizer
+OPTIMIZER: "adam"  # adam or sgd
+MOMENTUM: 0.9  # for SGD optimizer
+
+# Scheduler
+SCHEDULER: "step"  # step, cosine, or none
+STEP_SIZE: 3  # for StepLR
+GAMMA: 0.1  # for StepLR
+
+# Training settings
+LOG_INTERVAL: 10
+
+# Evaluation
+IOU_THRESHOLD: 0.5  # for mAP calculation
+AP_INTERPOLATION_POINTS: 11  # 11-point interpolation for AP
+
+# Inference
+CONF_THRESHOLD: 0.5  # confidence threshold
+NMS_THRESHOLD: 0.5  # NMS IoU threshold
+
+# Loss weights (if needed)
 LABELS: 1.0
 BBOX: 1.0
-
-IMAGE_SIZE: 640
