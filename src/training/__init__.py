@@ -1,5 +1,7 @@
 """Training utilities including Trainer, optimizers, and schedulers."""
 
 from .trainer import Trainer
+from .optimizer import build_optimizer
+from .scheduler import build_scheduler
 
-__all__ = ["Trainer"]
+__all__ = ["Trainer", "build_optimizer", "build_scheduler"]
