@@ -66,8 +66,6 @@ if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)  # Lên 1 cấp từ tools/
 
-    # === THIẾT LẬP ĐƯỜNG DẪN DỰA TRÊN PROJECT CỦA BẠN ===
-
     # Train set
     ORIG_TRAIN_JSON = os.path.join(project_root, "data/annotations/instances_train2017.json")
     ORIG_TRAIN_IMAGES = os.path.join(project_root, "data/raw/train2017")
